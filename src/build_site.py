@@ -100,7 +100,44 @@ button {
   cursor: pointer;
 }
 button:hover { border-color: var(--accent); }
-input[type="range"] { width: min(60vw, 340px); accent-color: var(--hot); }
+#toggle { min-width: 84px; }   /* the same width for "Pause" and "Play" */
+/* The slider is drawn by hand: WebKit's default track is nearly black on this
+   background. */
+input[type="range"] {
+  width: min(60vw, 340px);
+  height: 20px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line2);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line2);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hot);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hot);
+}
 input[type="text"] {
   font: inherit;
   font-size: 16px;
@@ -114,6 +151,8 @@ input[type="text"] {
   letter-spacing: 0.04em;
 }
 input:focus { outline: none; border-color: var(--accent); }
+input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent); }
+input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--accent); }
 .readout {
   color: #8089ad;
   font-size: 13px;
@@ -314,6 +353,7 @@ def axis_page(cfg):
         font-family: Demo;
         font-size: {cfg['size']};
         font-variation-settings: "{tag}" {lo};
+        color: {cfg.get('color', '#fff')};
         animation: drive {loop}s linear infinite;{extra}
       }}
       .word {{ font-family: Demo; font-size: min(15vmin, 96px); }}
@@ -408,7 +448,7 @@ def axis_hero(cfg):
     display: grid;
     place-items: center;
     font-family: F;
-    color: #fff;
+    color: {cfg.get('color', '#fff')};
     font-size: {cfg['hero_size']};
     line-height: 1;
   }}
@@ -794,7 +834,7 @@ DEMOS = [
         "file": "Plasma.woff2", "tag": "TIME", "min": 0, "max": 1000,
         "label": "time", "loop": 8, "size": "min(64vmin, 440px)",
         "hero_size": "80vmin",
-        "stage_css": "color: #39ff8a;",
+        "color": "#39ff8a",            # the dots' color where COLRv1 is missing
         "title": "A plasma field in one letter",
         "card_title": "Plasma",
         "card_desc": "A pulsing, swirling demoscene plasma made of 256 dots.",
