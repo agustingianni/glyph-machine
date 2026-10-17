@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spinning 3D type - Font Demos</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      @font-face {
+        font-family: Demo;
+        src: url(../fonts/CubeSpin.woff2) format("woff2");
+      }
+      @keyframes drive {
+        from { font-variation-settings: "SPIN" 0; }
+        to { font-variation-settings: "SPIN" 360; }
+      }
+      .stage {
+        font-family: Demo;
+        font-size: min(52vmin, 360px);
+        font-variation-settings: "SPIN" 0;
+        animation: drive 5s linear infinite;
+      }
+      .word { font-family: Demo; font-size: min(15vmin, 96px); }
+      .word span { animation: drive 5s linear infinite; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav><a href="../">&larr; All demos</a></nav>
+      <h1 class="title">Spinning 3D type</h1>
+      <p class="lede">Every shape here is one character of text. Letters and digits are extruded 3D wireframes, and other symbols are a cube. One <code>SPIN</code> axis turns them all, with perspective baked into each glyph.</p>
+
+      <div class="stage" id="stage" aria-hidden="true">#</div>
+
+      <div class="controls">
+        <button id="toggle">Pause</button>
+        <input type="range" id="scrub" min="0" max="360" value="0"
+          aria-label="spin axis" />
+        <span class="readout" id="readout">spin: auto</span>
+      </div>
+      <div class="controls">
+        <input type="text" id="word" value="HELLO" maxlength="14"
+          aria-label="your word" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="word" id="wordout" aria-hidden="true"></div>
+
+      <div class="legend">
+        <span class="chip"><b>Variable font</b>, one <code>SPIN</code> axis</span>
+        <span class="chip"><b>26 letters and 10 digits</b>, plus a cube</span>
+        <span class="chip"><b>25 masters</b>, 0 to 360 degrees</span>
+        <span class="chip">Near edges drawn thicker than far ones</span>
+      </div>
+
+      <p class="foot">A CSS keyframe sweeps the <code>SPIN</code> axis, and each letter of your word runs a little ahead of the one before it. Drag the slider to turn everything by hand.</p>
+    </div>
+    <script>
+      var LO = 0, HI = 360, LOOP = 5, STAGGER = 0.12;
+      var stage = document.getElementById("stage"),
+        toggle = document.getElementById("toggle"),
+        scrub = document.getElementById("scrub"),
+        readout = document.getElementById("readout"),
+        word = document.getElementById("word"),
+        wordout = document.getElementById("wordout");
+      var playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // The stage and each letter of the word run the CSS animation "drive",
+      // which sweeps the axis once every LOOP seconds. Pause and the slider
+      // set the same clock on all of them. Each letter has a negative
+      // animation-delay, so it runs STAGGER seconds ahead of the one before it
+      // and the word ripples.
+      function now() {
+        return stage.getAnimations()[0].currentTime;
+      }
+      function setClock(ms) {
+        // Pause or play first: either one finishes on the next frame, and
+        // would move a time that was set before it.
+        document.getAnimations().forEach(function (a) {
+          playing ? a.play() : a.pause();
+          a.currentTime = ms;
+        });
+        var value = Math.round(LO + (ms / 1000 / LOOP % 1) * (HI - LO));
+        toggle.textContent = playing ? "Pause" : "Play";
+        readout.textContent = "spin: " + (playing ? "auto" : value);
+      }
+      toggle.onclick = function () {
+        playing = !playing;
+        setClock(now());
+      };
+      scrub.oninput = function () {
+        playing = false;
+        setClock((scrub.value - LO) / (HI - LO) * LOOP * 1000);
+      };
+      if (word) {
+        word.addEventListener("input", function () {
+          wordout.textContent = "";
+          Array.from(word.value || " ").forEach(function (ch, i) {
+            var s = document.createElement("span");
+            s.textContent = ch === " " ? "\u00a0" : ch;
+            s.style.animationDelay = -(i + 1) * STAGGER + "s";
+            wordout.appendChild(s);
+          });
+          setClock(now());
+        });
+        word.dispatchEvent(new Event("input"));
+      }
+      setClock(0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 620px at 50% -10%, #1c1236, #05060c 62%) no-repeat,
+      #05060c;
+  }
+  @font-face {
+    font-family: F;
+    src: url(../fonts/Plasma.woff2) format("woff2");
+  }
+  @keyframes d {
+    from { font-variation-settings: "TIME" 0; }
+    to { font-variation-settings: "TIME" 1000; }
+  }
+  .s {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: F;
+    color: #fff;
+    font-size: 80vmin;
+    line-height: 1;
+  }
+  .s > div { overflow: hidden; }
+  .s span {
+    display: inline-block;
+    font-variation-settings: "TIME" 0;
+    animation: d 8s linear infinite;
+  }
+</style>
+<div class="s"><div><span style="animation-delay: 0s">A</span></div></div>

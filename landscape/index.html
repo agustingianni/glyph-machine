@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A landscape in one letter - Font Demos</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      @font-face {
+        font-family: Demo;
+        src: url(../fonts/Terrain.woff2) format("woff2");
+      }
+      @keyframes drive {
+        from { font-variation-settings: "TIME" 0; }
+        to { font-variation-settings: "TIME" 1000; }
+      }
+      .stage {
+        font-family: Demo;
+        font-size: min(64vmin, 440px);
+        font-variation-settings: "TIME" 0;
+        animation: drive 16s linear infinite;
+        overflow: hidden;
+      }
+      .word { font-family: Demo; font-size: min(15vmin, 96px); }
+      .word span { animation: drive 16s linear infinite; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav><a href="../">&larr; All demos</a></nav>
+      <h1 class="title">A landscape in one letter</h1>
+      <p class="lede">A single letter of text, drawn by a custom font. Three mountain ranges scroll at different speeds, the sun sets and rises, and the stars come out. The shapes, the colors, and the motion all live inside the font file.</p>
+
+      <div class="stage" id="stage" aria-hidden="true">A</div>
+
+      <div class="controls">
+        <button id="toggle">Pause</button>
+        <input type="range" id="scrub" min="0" max="1000" value="0"
+          aria-label="time axis" />
+        <span class="readout" id="readout">time: auto</span>
+      </div>
+
+      <div class="legend">
+        <span class="chip"><b>CFF2 blend</b> moves the mountains and the sun</span>
+        <span class="chip"><b>COLRv1</b> variable paints darken the sky</span>
+        <span class="chip"><b>COLRv0</b> flat colors where COLRv1 is missing</span>
+        <span class="chip"><b>49 masters</b> over one loop</span>
+      </div>
+
+      <p class="foot">The font carries a <code>TIME</code> axis. One CSS keyframe sweeps it, and the font's charstrings blend 49 masters into each frame. Each range is a sum of sine waves that repeats every width, so the loop is seamless. Drag the slider to steer <code>TIME</code> yourself.</p>
+    </div>
+    <script>
+      var LO = 0, HI = 1000, LOOP = 16, STAGGER = 0.12;
+      var stage = document.getElementById("stage"),
+        toggle = document.getElementById("toggle"),
+        scrub = document.getElementById("scrub"),
+        readout = document.getElementById("readout"),
+        word = document.getElementById("word"),
+        wordout = document.getElementById("wordout");
+      var playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // The stage and each letter of the word run the CSS animation "drive",
+      // which sweeps the axis once every LOOP seconds. Pause and the slider
+      // set the same clock on all of them. Each letter has a negative
+      // animation-delay, so it runs STAGGER seconds ahead of the one before it
+      // and the word ripples.
+      function now() {
+        return stage.getAnimations()[0].currentTime;
+      }
+      function setClock(ms) {
+        // Pause or play first: either one finishes on the next frame, and
+        // would move a time that was set before it.
+        document.getAnimations().forEach(function (a) {
+          playing ? a.play() : a.pause();
+          a.currentTime = ms;
+        });
+        var value = Math.round(LO + (ms / 1000 / LOOP % 1) * (HI - LO));
+        toggle.textContent = playing ? "Pause" : "Play";
+        readout.textContent = "time: " + (playing ? "auto" : value);
+      }
+      toggle.onclick = function () {
+        playing = !playing;
+        setClock(now());
+      };
+      scrub.oninput = function () {
+        playing = false;
+        setClock((scrub.value - LO) / (HI - LO) * LOOP * 1000);
+      };
+      if (word) {
+        word.addEventListener("input", function () {
+          wordout.textContent = "";
+          Array.from(word.value || " ").forEach(function (ch, i) {
+            var s = document.createElement("span");
+            s.textContent = ch === " " ? "\u00a0" : ch;
+            s.style.animationDelay = -(i + 1) * STAGGER + "s";
+            wordout.appendChild(s);
+          });
+          setClock(now());
+        });
+        word.dispatchEvent(new Event("input"));
+      }
+      setClock(0);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Game of Life in a font - Font Demos</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      @font-face {
+        font-family: Life;
+        src: url(../fonts/Life.woff2) format("woff2");
+      }
+      @keyframes life {
+        from { font-variation-settings: "TIME" 0; }
+        to { font-variation-settings: "TIME" 120; }
+      }
+      .board {
+        display: inline-block;
+        font-family: Life;
+        font-size: min(172px, calc((100vw - 56px) / 4.8));
+        line-height: 2;
+        white-space: nowrap;
+        color: #39ff8a;
+        animation: life 15.125s steps(121, jump-none) infinite;
+      }
+      .life-stage {
+        padding: 10px;
+        background: #080b16;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        line-height: 0;
+      }
+      .board { cursor: crosshair; touch-action: none; user-select: none; }
+      .holds {
+        width: 100%;
+        text-align: left;
+      }
+      .holds code {
+        color: var(--muted);
+        font-size: 11.5px;
+        line-height: 1.5;
+        display: block;
+        line-break: anywhere;
+        overflow-wrap: anywhere;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav><a href="../">&larr; All demos</a></nav>
+      <h1 class="title">The Game of Life in a font</h1>
+      <p class="lede">Conway's Game of Life, computed by a font. The page holds only the first generation, as one line of text. The font's <b>GSUB</b> table works out the next 120. Click or drag on the board to draw your own.</p>
+
+      <div class="life-stage">
+        <div class="board" id="board" role="img" aria-label="Game of Life board"></div>
+      </div>
+
+      <div class="controls">
+        <button id="toggle">Pause</button>
+        <input type="range" id="scrub" min="0" max="120" value="0"
+          aria-label="generation" />
+        <span class="readout" id="readout">generation 0</span>
+      </div>
+      <div class="controls" id="presets">
+        <button data-p="Glider gun">Glider gun</button>
+        <button data-p="Spaceships">Spaceships</button>
+        <button data-p="Oscillators">Oscillators</button>
+        <button data-p="Acorn">Acorn</button>
+        <button data-p="Random">Random</button>
+        <button data-p="Clear">Clear</button>
+      </div>
+
+      <div class="panel holds">
+        <div class="cap">What the page holds: generation 0, column by column</div>
+        <code id="holds"></code>
+      </div>
+
+      <div class="legend">
+        <span class="chip"><b>GSUB</b> chain rules count the neighbors</span>
+        <span class="chip"><b>3 passes</b> per generation</span>
+        <span class="chip"><b>FeatureVariations</b>: <code>TIME</code> picks the generation</span>
+        <span class="chip"><b>COLRv0</b> colors: born, alive, just died</span>
+      </div>
+
+      <p class="foot">The page never computes a generation. It stores generation 0 and sets the <code>TIME</code> axis, and for generation <i>g</i> the font switches on 3&nbsp;&times;&nbsp;<i>g</i> lookups. In each generation, one pass counts every cell's live neighbors above and below. Two more passes add the counts from the columns to its left and right, which sit a whole column away in the text. That is up to 360 lookups over about 1,000 glyphs, every time the generation changes.</p>
+    </div>
+    <script>
+      var COLS = 48, ROWS = 20, GENS = 120, RATE = 8;
+      var LOOP = (GENS + 1) / RATE;
+      var PRESETS = {"Glider gun": [[1, 1, ["........................O...........", "......................O.O...........", "............OO......OO............OO", "...........O...O....OO............OO", "OO........O.....O...OO..............", "OO........O...O.OO....O.O...........", "..........O.....O.......O...........", "...........O...O....................", "............OO......................"]]], "Spaceships": [[12, 1, ["..OO...", "O....O.", "......O", "O.....O", ".OOOOOO"]], [6, 12, ["..O...", "O...O.", ".....O", "O....O", ".OOOOO"]], [1, 23, ["O..O.", "....O", "O...O", ".OOOO"]]], "Oscillators": [[3, 3, ["..OOO...OOO..", ".............", "O....O.O....O", "O....O.O....O", "O....O.O....O", "..OOO...OOO..", ".............", "..OOO...OOO..", "O....O.O....O", "O....O.O....O", "O....O.O....O", ".............", "..OOO...OOO.."]], [9, 22, ["..O....O..", "OO.OOOO.OO", "..O....O.."]], [3, 38, ["OOO"]], [9, 38, [".OOO", "OOO."]], [14, 38, ["OO..", "OO..", "..OO", "..OO"]]], "Acorn": [[9, 20, [".O.....", "...O...", "OO..OOO"]]]};
+      var board = document.getElementById("board"),
+        holds = document.getElementById("holds"),
+        toggle = document.getElementById("toggle"),
+        scrub = document.getElementById("scrub"),
+        readout = document.getElementById("readout");
+      var grid = [];
+
+      // The page only ever writes generation 0. Each column is one run of
+      // '.' and 'O' from top to bottom, and '|' ends a column.
+      function render() {
+        var cols = [];
+        for (var c = 0; c < COLS; c++) {
+          var s = "";
+          for (var r = 0; r < ROWS; r++) s += grid[r][c] ? "O" : ".";
+          cols.push(s);
+        }
+        board.textContent = holds.textContent = "[" + cols.join("|") + "]";
+      }
+      function load(name) {
+        grid = [];
+        for (var r = 0; r < ROWS; r++) {
+          grid.push([]);
+          for (var c = 0; c < COLS; c++)
+            grid[r].push(name === "Random" ? Number(Math.random() < 0.28) : 0);
+        }
+        (PRESETS[name] || []).forEach(function (item) {
+          item[2].forEach(function (line, r) {
+            for (var c = 0; c < line.length; c++)
+              if (line[c] === "O") grid[item[0] + r][item[1] + c] = 1;
+          });
+        });
+        render();
+      }
+
+      // One CSS animation steps TIME through 0..GENS. Pause, scrub, and
+      // drawing just move that animation's clock.
+      var anim = board.getAnimations()[0];
+      function generation() {
+        var t = (anim.currentTime / 1000) % LOOP;
+        return Math.min(GENS, Math.floor(t * RATE));
+      }
+      function show(g, keepPlaying) {
+        if (!keepPlaying) anim.pause();
+        anim.currentTime = (g + 0.5) / RATE * 1000;
+      }
+      function sync() {
+        var g = generation();
+        readout.textContent = "generation " + g;
+        if (anim.playState === "running") scrub.value = g;
+        toggle.textContent = anim.playState === "running" ? "Pause" : "Play";
+        requestAnimationFrame(sync);
+      }
+      toggle.onclick = function () {
+        anim.playState === "running" ? anim.pause() : anim.play();
+      };
+      scrub.oninput = function () { show(Number(scrub.value)); };
+      document.querySelectorAll("#presets button").forEach(function (b) {
+        b.onclick = function () {
+          load(b.getAttribute("data-p"));
+          show(0, anim.playState === "running");
+        };
+      });
+
+      // Click or drag to draw. Drawing goes back to generation 0, the only
+      // generation the page actually stores.
+      var paint = null;
+      function cellAt(e) {
+        var box = board.getBoundingClientRect(), size = box.width / COLS;
+        var c = Math.floor((e.clientX - box.left) / size),
+          r = Math.floor((e.clientY - box.top) / size);
+        return r >= 0 && r < ROWS && c >= 0 && c < COLS ? [r, c] : null;
+      }
+      board.addEventListener("pointerdown", function (e) {
+        var at = cellAt(e);
+        if (!at) return;
+        show(0);
+        paint = 1 - grid[at[0]][at[1]];
+        grid[at[0]][at[1]] = paint;
+        render();
+        board.setPointerCapture(e.pointerId);
+      });
+      board.addEventListener("pointermove", function (e) {
+        var at = paint === null ? null : cellAt(e);
+        if (!at || grid[at[0]][at[1]] === paint) return;
+        grid[at[0]][at[1]] = paint;
+        render();
+      });
+      board.addEventListener("pointerup", function () { paint = null; });
+
+      load("Glider gun");
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) show(0);
+      sync();
+    </script>
+  </body>
+</html>

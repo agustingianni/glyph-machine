@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Font Demos</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      @font-face {
+        font-family: Spin;
+        src: url(fonts/CubeSpin.woff2) format("woff2");
+      }
+      @keyframes spin {
+        from { font-variation-settings: "SPIN" 0; }
+        to { font-variation-settings: "SPIN" 360; }
+      }
+      .mark { font-family: Spin; }
+      .mark span { animation: spin 6s linear infinite; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="mark" aria-hidden="true"><span style="animation-delay: 0s">F</span><span style="animation-delay: -0.12s">O</span><span style="animation-delay: -0.24s">N</span><span style="animation-delay: -0.36s">T</span><span style="animation-delay: -0.48s">S</span></div>
+      <h1 class="title">Fonts that draw impossible things</h1>
+      <p class="lede">
+        Five small experiments where a line of text does something a font is not
+        supposed to do. Every scene lives inside a font file and is drawn by your
+        browser's own text engine. No image, canvas, or SVG. The spinning letters
+        above are text too.
+      </p>
+      <div class="grid">
+        <a class="card" href="landscape/">
+          <iframe class="shot" src="landscape/hero.html" loading="lazy"
+            tabindex="-1" scrolling="no" title="A landscape in one letter preview"></iframe>
+          <div class="meta">
+            <h3>Landscape</h3>
+            <p>Mountains scroll past as the sun sets and rises. One letter.</p>
+          </div>
+        </a>
+        <a class="card" href="plasma/">
+          <iframe class="shot" src="plasma/hero.html" loading="lazy"
+            tabindex="-1" scrolling="no" title="A plasma field in one letter preview"></iframe>
+          <div class="meta">
+            <h3>Plasma</h3>
+            <p>A pulsing, swirling demoscene plasma made of 256 dots.</p>
+          </div>
+        </a>
+        <a class="card" href="cube/">
+          <iframe class="shot" src="cube/hero.html" loading="lazy"
+            tabindex="-1" scrolling="no" title="Spinning 3D type preview"></iframe>
+          <div class="meta">
+            <h3>Spinning 3D type</h3>
+            <p>Wireframe 3D letters and a tumbling cube. Type a word and it spins.</p>
+          </div>
+        </a>
+        <a class="card" href="calc/">
+          <iframe class="shot" src="calc/hero.html" loading="lazy"
+            tabindex="-1" scrolling="no" title="A font that does math preview"></iframe>
+          <div class="meta">
+            <h3>Calculator</h3>
+            <p>A seven-segment font whose GSUB table evaluates 12+34.</p>
+          </div>
+        </a>
+        <a class="card wide" href="life/">
+          <iframe class="shot" src="life/hero.html" loading="lazy"
+            tabindex="-1" scrolling="no" title="The Game of Life in a font preview"></iframe>
+          <div class="meta">
+            <h3>Game of Life</h3>
+            <p>Conway's Life, worked out by the font's GSUB table. Draw your own.</p>
+          </div>
+        </a>
+      </div>
+      <p class="foot">
+        Built with <code>fontTools</code>. Chrome and Firefox shape text with
+        HarfBuzz, and Safari uses CoreText. Safari does not draw COLRv1 color
+        fonts, so it shows flat colors instead of gradients. Source for every
+        font is in <code>src/</code>.
+      </p>
+    </div>
+  </body>
+</html>
