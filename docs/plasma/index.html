@@ -3,59 +3,65 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Spinning 3D type - Font Demos</title>
+    <title>A plasma field in one letter - Glyph Machine</title>
+    <meta name="description" content="A pulsing, swirling demoscene plasma made of 256 dots." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Glyph Machine" />
+    <meta property="og:title" content="A plasma field in one letter" />
+    <meta property="og:description" content="A pulsing, swirling demoscene plasma made of 256 dots." />
+    <meta property="og:url" content="https://agustingianni.github.io/glyph-machine/plasma/" />
+    <meta property="og:image" content="https://agustingianni.github.io/glyph-machine/plasma/preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="../style.css" />
     <style>
       @font-face {
         font-family: Demo;
-        src: url(../fonts/CubeSpin.woff2) format("woff2");
+        src: url(../fonts/Plasma.woff2) format("woff2");
       }
       @keyframes drive {
-        from { font-variation-settings: "SPIN" 0; }
-        to { font-variation-settings: "SPIN" 360; }
+        from { font-variation-settings: "TIME" 0; }
+        to { font-variation-settings: "TIME" 1000; }
       }
       .stage {
         font-family: Demo;
-        font-size: min(52vmin, 360px);
-        font-variation-settings: "SPIN" 0;
-        animation: drive 5s linear infinite;
+        font-size: min(64vmin, 440px);
+        font-variation-settings: "TIME" 0;
+        animation: drive 8s linear infinite;
+        color: #39ff8a;
       }
       .word { font-family: Demo; font-size: min(15vmin, 96px); }
-      .word span { animation: drive 5s linear infinite; }
+      .word span { animation: drive 8s linear infinite; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <nav><a href="../">&larr; All demos</a></nav>
-      <h1 class="title">Spinning 3D type</h1>
-      <p class="lede">Every shape here is one character of text. Letters and digits are extruded 3D wireframes, and other symbols are a cube. One <code>SPIN</code> axis turns them all, with perspective baked into each glyph.</p>
+      <h1 class="title">A plasma field in one letter</h1>
+      <p class="lede">A single letter of text. A grid of 256 dots pulses and swirls, the classic demoscene plasma, computed inside the font by interpolating between 25 time-step masters. A color wheel turns underneath.</p>
 
-      <div class="stage" id="stage" aria-hidden="true">#</div>
+      <div class="stage" id="stage" aria-hidden="true">A</div>
 
       <div class="controls">
         <button id="toggle">Pause</button>
-        <input type="range" id="scrub" min="0" max="360" value="0"
-          aria-label="spin axis" />
-        <span class="readout" id="readout">spin: auto</span>
+        <input type="range" id="scrub" min="0" max="1000" value="0"
+          aria-label="time axis" />
+        <span class="readout" id="readout">time: auto</span>
       </div>
-      <div class="controls">
-        <input type="text" id="word" value="HELLO" maxlength="14"
-          aria-label="your word" autocomplete="off" spellcheck="false" />
-      </div>
-      <div class="word" id="wordout" aria-hidden="true"></div>
 
       <div class="legend">
-        <span class="chip"><b>Variable font</b>, one <code>SPIN</code> axis</span>
-        <span class="chip"><b>26 letters and 10 digits</b>, plus a cube</span>
-        <span class="chip"><b>25 masters</b>, 0 to 360 degrees</span>
-        <span class="chip">Near edges drawn thicker than far ones</span>
+        <span class="chip"><b>Variable font</b>, one <code>TIME</code> axis</span>
+        <span class="chip"><b>256 round dots</b> sized by summed sine waves</span>
+        <span class="chip"><b>COLRv1</b> sweep gradient that turns with time</span>
+        <span class="chip">The motion is glyph interpolation</span>
       </div>
 
-      <p class="foot">A CSS keyframe sweeps the <code>SPIN</code> axis, and each letter of your word runs a little ahead of the one before it. Drag the slider to turn everything by hand.</p>
+      <p class="foot">A CSS keyframe sweeps the <code>TIME</code> axis; the browser interpolates the masters so the dots flow. The gradient's rotation is a variable paint on the same axis. Without COLRv1 the dots take the text color.</p>
     </div>
     <script>
-      var LO = 0, HI = 360, LOOP = 5, STAGGER = 0.12;
+      var LO = 0, HI = 1000, LOOP = 8, STAGGER = 0.12;
       var stage = document.getElementById("stage"),
         toggle = document.getElementById("toggle"),
         scrub = document.getElementById("scrub"),
@@ -81,7 +87,7 @@
         });
         var value = Math.round(LO + (ms / 1000 / LOOP % 1) * (HI - LO));
         toggle.textContent = playing ? "Pause" : "Play";
-        readout.textContent = "spin: " + (playing ? "auto" : value);
+        readout.textContent = "time: " + (playing ? "auto" : value);
       }
       toggle.onclick = function () {
         playing = !playing;

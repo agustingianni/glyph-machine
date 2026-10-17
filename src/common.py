@@ -5,7 +5,8 @@ from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor, Source
 from fontTools.varLib import build as varbuild
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FONTS = os.path.join(ROOT, "fonts")
+SITE = os.path.join(ROOT, "docs")      # the published site
+FONTS = os.path.join(SITE, "fonts")
 VISIBLE_ASCII = range(0x21, 0x7F)
 
 def make_font(family, glyphs, cmap, advances, ascent, descent, cff=False):
@@ -54,10 +55,10 @@ def make_variable(tag, name, masters):
     return vf
 
 def save(font, filename, note=""):
-    """Save into fonts/. A .woff2 name compresses the font (needs `brotli`)."""
+    """Save into docs/fonts/. A .woff2 name compresses the font (needs `brotli`)."""
     os.makedirs(FONTS, exist_ok=True)
     path = os.path.join(FONTS, filename)
     font.flavor = "woff2" if filename.endswith(".woff2") else None
     font.save(path)
-    print(f"wrote fonts/{filename} ({os.path.getsize(path):,} bytes){note}")
+    print(f"wrote docs/fonts/{filename} ({os.path.getsize(path):,} bytes){note}")
     return path

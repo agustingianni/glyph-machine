@@ -14,7 +14,8 @@ example, a long line that does not wrap prints:
 """
 import argparse, functools, http.server, os, sys, threading
 from playwright.sync_api import sync_playwright
-from build_site import DEMOS, ROOT
+from build_site import DEMOS
+from common import SITE
 
 # Runs in the page (or in a preview frame) and returns a list of problems.
 FIND = r"""() => {
@@ -54,7 +55,7 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 def serve():
-    handler = functools.partial(Quiet, directory=ROOT)
+    handler = functools.partial(Quiet, directory=SITE)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return f"http://127.0.0.1:{server.server_port}/"

@@ -1,4 +1,4 @@
-# Font Demos
+# Glyph Machine
 
 Five small experiments where a line of text does something a font is not
 supposed to do. Each scene lives entirely inside a font file and is drawn by the
@@ -6,29 +6,29 @@ browser's own text engine. No image, no canvas, no SVG.
 
 ## The demos
 
-- **Landscape** (`landscape/`) - three mountain ranges scroll at different
+- **Landscape** (`docs/landscape/`) - three mountain ranges scroll at different
   speeds while a striped sun sets and rises again. CFF2 `blend` moves every
   outline across 49 masters. COLRv1 paints the gradients, and its variable
   paints darken the sky and bring out the stars as the sun goes down. A COLRv0
   layer set gives the same scene in flat colors where COLRv1 is missing.
-- **Plasma** (`plasma/`) - a 256-dot demoscene plasma. A variable font with one
-  `TIME` axis and 25 masters. The dots are sized by summed sine waves. A COLRv1
-  sweep gradient colors them and turns with the same axis.
-- **Spinning 3D type** (`cube/`) - every letter and digit is an extruded 3D
+- **Plasma** (`docs/plasma/`) - a 256-dot demoscene plasma. A variable font with
+  one `TIME` axis and 25 masters. The dots are sized by summed sine waves. A
+  COLRv1 sweep gradient colors them and turns with the same axis.
+- **Spinning 3D type** (`docs/cube/`) - every letter and digit is an extruded 3D
   wireframe, and every other ASCII symbol is a tumbling cube. One `SPIN` axis
   turns them all, with perspective baked into each glyph. Type a word and it
   spins.
-- **Calculator** (`calc/`) - a seven-segment font whose `GSUB` table evaluates
-  sums like `12+34-5`. Whole numbers from 0 to 99 with `+`, `-`, and `*`,
-  worked left to right like a pocket calculator. A result outside 0 to 99
+- **Calculator** (`docs/calc/`) - a seven-segment font whose `GSUB` table
+  evaluates sums like `12+34-5`. Whole numbers from 0 to 99 with `+`, `-`, and
+  `*`, worked left to right like a pocket calculator. A result outside 0 to 99
   shows `E`. A line can hold up to 8 operators, and a number up to 8 digits.
   Copy the output and your text comes back.
-- **Game of Life** (`life/`) - Conway's Life on a 48x20 board, computed by
-  `GSUB`. The page stores only generation 0, as one line of text written
-  column by column, like `[.O|O.|..]`. A `TIME` axis picks the generation:
-  through `FeatureVariations`, `TIME=g` turns on 3 lookups per generation, up
-  to 120. COLRv0 colors cells that are newborn, alive, or just died. Click or
-  drag on the board to draw.
+- **Game of Life** (`docs/life/`) - Conway's Life on a 48x20 board, computed by
+  `GSUB`. The page stores only generation 0, as one line of text written column
+  by column, like `[.O|O.|..]`. A `TIME` axis picks the generation: through
+  `FeatureVariations`, `TIME=g` turns on 3 lookups per generation, up to 120.
+  COLRv0 colors cells that are newborn, alive, or just died. Click or drag on
+  the board to draw.
 
 ## Browser support
 
@@ -41,9 +41,9 @@ with Playwright.
 
 ## Run locally
 
-Serve the folder with any static web server, for example:
+Serve the `docs/` folder with any static web server, for example:
 
-    python3 -m http.server 8000
+    python3 -m http.server 8000 --directory docs
 
 Then open <http://localhost:8000/>.
 
@@ -52,11 +52,10 @@ Then open <http://localhost:8000/>.
     pip install fonttools brotli
     python3 src/build_all.py
 
-This builds the five fonts into `fonts/` (as WOFF2) and then the pages:
-`style.css`, `index.html`, and each `<demo>/index.html` plus a bare
-`<demo>/hero.html` used for the gallery previews. `src/build_site.py` rebuilds
-only the pages. Tested with fontTools 4.67. The calculator takes up to a
-minute, because its `GSUB` table holds a rule for every pair of numbers.
+This builds the five fonts into `docs/fonts/` (as WOFF2) and then the pages in
+`docs/`. `src/build_site.py` rebuilds only the pages. Tested with fontTools
+4.67. The calculator takes up to a minute, because its `GSUB` table holds a rule
+for every pair of numbers.
 
 ## How Life fits in a font
 
@@ -87,9 +86,21 @@ much faster. CoreText is slow at replacing glyphs. So each cell glyph stores
 four fields, and a pass only replaces a glyph when its field really changes.
 That cut WebKit's time on busy boards about in half.
 
-## Check the layout
+## Link previews
+
+When someone shares a link to the site, social sites show a title, a line of
+text, and a 1200 x 630 image. Every page sets these through Open Graph tags.
+The images are screenshots of each demo, taken by a script:
 
     pip install playwright && python3 -m playwright install
+    python3 src/build_previews.py
+
+Run it again after you change how a demo looks. The tags need the site's full
+URL, which is `SITE_URL` at the top of `src/build_site.py`. Change it if the
+site lives somewhere else, then run `src/build_site.py` again.
+
+## Check the layout
+
     python3 src/check_layout.py
 
 This loads the gallery and every demo page in Chromium, Firefox, and WebKit, at
@@ -100,20 +111,28 @@ site itself, so no server needs to be running. A full run takes about a minute.
 
 ## Deploy (GitHub Pages)
 
-The site is static, so no build runs on GitHub. Push to a repo and turn on Pages,
-serving from the root of the default branch. The site then lives at
+The site is static and already built in `docs/`, so no build runs on GitHub.
+Push to a repo, then in Settings > Pages choose "Deploy from a branch", the
+`main` branch, and the `/docs` folder. The site then lives at
 `https://<user>.github.io/<repo>/`.
 
 ## Layout
 
-    index.html          gallery landing page
-    style.css           shared design for every page
-    <demo>/index.html   a demo page
-    <demo>/hero.html    the bare preview shown in the gallery card
-    fonts/              the font files the pages load
-    src/common.py       shared helpers: build a font, merge masters, save
-    src/build_*.py      one script per font, plus build_site.py and build_all.py
-    src/check_layout.py checks every page for text that sticks out of its box
+    docs/                    the published site, all generated by src/
+      index.html             gallery landing page
+      style.css              shared design for every page
+      preview.png            the gallery's link preview image
+      fonts/                 the font files the pages load
+      <demo>/index.html      a demo page
+      <demo>/hero.html       the bare preview shown in the gallery card
+      <demo>/preview.png     the demo's link preview image
+    src/
+      build_all.py           builds every font, then the pages
+      build_<font>.py        one script per font
+      build_site.py          the pages, their text, and the shared design
+      build_previews.py      the link preview images
+      check_layout.py        checks that nothing sticks out of its box
+      common.py              shared helpers: build a font, merge masters, save
 
 ## Prior art
 
