@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A font that computes MD5 - Glyph Machine</title>
+    <meta name="description" content="Type a message and the font draws its MD5 hash. Safari and Firefox." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Glyph Machine" />
+    <meta property="og:title" content="A font that computes MD5" />
+    <meta property="og:description" content="Type a message and the font draws its MD5 hash. Safari and Firefox." />
+    <meta property="og:url" content="https://agustingianni.github.io/glyph-machine/md5/" />
+    <meta property="og:image" content="https://agustingianni.github.io/glyph-machine/md5/preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      @font-face {
+        font-family: MD5Graphite;
+        src: url(../fonts/MD5Graphite.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: MD5Safari;
+        src: url(../fonts/MD5Safari.woff2) format("woff2");
+      }
+      .panels { grid-template-columns: 1fr; }
+      .panel { min-height: 0; }
+      .dom {
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 15px;
+        color: var(--muted);
+        white-space: pre-wrap;
+      }
+      .dom .frame {
+        display: inline-block;
+        margin: 0 3px;
+        padding: 0 5px;
+        border: 1px solid var(--line2);
+        border-radius: 5px;
+        font-size: 11px;
+        color: var(--faint);
+      }
+      /* The digest must stay one run of text: a line break would split the
+         run, and the font would shape each piece on its own. */
+      .digest {
+        font-size: min(40px, calc((100vw - 90px) / 19.2));
+        line-height: 1;
+        min-height: 1em;
+        white-space: pre;
+        overflow-wrap: normal;
+        letter-spacing: 0;
+        font-kerning: none;
+        color: #38e8c0;
+        text-shadow: 0 0 0.06em #38e8c088;
+      }
+      .readout.error { color: var(--hot); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav>
+        <a href="../">&larr; All demos</a>
+        <a href="https://github.com/agustingianni/glyph-machine/blob/main/src/build_hash.py">Source</a>
+      </nav>
+      <h1 class="title">A font that computes MD5</h1>
+      <p class="lede">Type a message. While your browser lays out the text, the font works out its <b>MD5</b> hash and draws the 32 hex digits. All 64 rounds of MD5 run inside the font. The page's JavaScript only checks that the input is printable ASCII.</p>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="cap">What the page holds</div>
+          <div class="out dom"><span id="dom"></span></div>
+        </div>
+        <div class="panel">
+          <div class="cap">What the font draws</div>
+          <div class="out"><span class="digest" id="out" role="img"
+            aria-label="MD5 hash drawn by the font"></span></div>
+        </div>
+      </div>
+
+      <div class="controls" id="presets">
+        <button data-v="">Empty</button>
+        <button data-v="abc">abc</button>
+        <button data-v="hello">hello</button>
+        <button data-v="The quick brown fox jumps over the lazy dog">Quick brown fox</button>
+        <button data-v="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa">55 characters</button>
+      </div>
+      <div class="controls">
+        <input type="text" id="in" value="hello" maxlength="55" aria-label="your message"
+          autocomplete="off" spellcheck="false" />
+      </div>
+      <p class="readout" id="status" role="status">Loading the font...</p>
+
+      <div class="legend">
+        <span class="chip"><b>Firefox</b>: Graphite rules with integer registers, 6 KB</span>
+        <span class="chip"><b>Safari</b>: 2,690 AAT <code>morx</code> state machines, 22 KB</span>
+        <span class="chip"><b>Padding and length</b> worked out by the font</span>
+        <span class="chip">Up to 55 ASCII characters, one MD5 block</span>
+      </div>
+
+      <p class="foot">Each browser gets a font made for its own text engine. Firefox runs Graphite, a rule language with a small integer machine. That font keeps MD5's 16 message words and 4 state words as numbers on one glyph, and revisits the glyph 128 times. Safari runs Apple's AAT <code>morx</code> state machines, which have no numbers, only glyphs and a small state. That font first grows the text into a tape of 704 glyphs, one per bit. Then 2,180 state tables add, rotate, and copy bits along the tape, and keep each carry in the machine's state. The page puts a few invisible characters around your text, so even an empty message has something to shape. Chrome runs neither font.</p>
+    </div>
+    <script>
+      var GRAPHITE = CSS.supports("font-tech(features-graphite)");
+      var FAMILY = GRAPHITE ? "MD5Graphite" : "MD5Safari";
+      var START = "\ue000" + (GRAPHITE ? "" : "\ue002\ue002\ue002\ue002"), END = "\ue001";
+      function whenRunning(yes, no) {
+        document.fonts.load("100px " + FAMILY).then(function () {
+          var probe = document.createElement("span");
+          probe.style.cssText = "position: absolute; visibility: hidden; white-space: pre; font: 100px " + FAMILY;
+          probe.textContent = START + "a" + END;
+          document.body.appendChild(probe);
+          var width = probe.getBoundingClientRect().width;
+          probe.remove();
+          Math.abs(width - 1920) < 2 ? yes() : no();
+        }, no);
+      }
+      var inp = document.getElementById("in"),
+        dom = document.getElementById("dom"),
+        out = document.getElementById("out"),
+        readout = document.getElementById("status");
+      var state = "loading";   // then "ready", or "off" if the font does not run
+      out.style.fontFamily = FAMILY;
+
+      function frame(ch) {
+        var s = document.createElement("span");
+        s.className = "frame";
+        s.textContent = "U+" + ch.charCodeAt(0).toString(16).toUpperCase();
+        return s;
+      }
+      // The page only ever holds your message and the invisible characters
+      // around it. The hash exists only as glyphs the font draws.
+      function sync() {
+        var text = inp.value, ok = /^[\x20-\x7e]{0,55}$/.test(text);
+        dom.textContent = "";
+        Array.from(START).forEach(function (ch) { dom.appendChild(frame(ch)); });
+        dom.appendChild(document.createTextNode(text));
+        dom.appendChild(frame(END));
+        out.textContent = ok && state === "ready" ? START + text + END : "";
+        readout.className = "readout" + (ok && state !== "off" ? "" : " error");
+        if (state === "off")
+          readout.textContent = "This demo runs in Safari and Firefox. Your browser does not run either font.";
+        else if (!ok)
+          readout.textContent = "Use only printable ASCII: letters, digits, punctuation, and spaces.";
+        else if (state === "ready")
+          readout.textContent = text.length + " of 55 characters. Hash computed by "
+            + (GRAPHITE ? "Firefox's Graphite engine." : "Safari's AAT engine.");
+      }
+      inp.addEventListener("input", sync);
+      document.querySelectorAll("#presets button").forEach(function (b) {
+        b.onclick = function () {
+          inp.value = b.getAttribute("data-v");
+          sync();
+          inp.focus();
+        };
+      });
+      sync();
+      whenRunning(function () { state = "ready"; sync(); },
+                  function () { state = "off"; sync(); });
+    </script>
+  </body>
+</html>

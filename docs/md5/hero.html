@@ -1,0 +1,64 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 620px at 50% -10%, #1c1236, #05060c 62%) no-repeat,
+      #05060c;
+  }
+  @font-face {
+    font-family: MD5Graphite;
+    src: url(../fonts/MD5Graphite.woff2) format("woff2");
+  }
+  @font-face {
+    font-family: MD5Safari;
+    src: url(../fonts/MD5Safari.woff2) format("woff2");
+  }
+  .s {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 3vmin;
+  }
+  .c {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: max(12px, 3.2vw);
+    color: #9aa3c7;
+  }
+  .h {
+    font-size: calc(100vw / 22);
+    line-height: 1;
+    white-space: pre;
+    color: #38e8c0;
+    text-shadow: 0 0 0.06em #38e8c088;
+  }
+</style>
+<div class="s">
+  <div class="c" id="c">md5("hello")</div>
+  <div class="h" id="h"></div>
+</div>
+<script>
+      var GRAPHITE = CSS.supports("font-tech(features-graphite)");
+      var FAMILY = GRAPHITE ? "MD5Graphite" : "MD5Safari";
+      var START = "\ue000" + (GRAPHITE ? "" : "\ue002\ue002\ue002\ue002"), END = "\ue001";
+      function whenRunning(yes, no) {
+        document.fonts.load("100px " + FAMILY).then(function () {
+          var probe = document.createElement("span");
+          probe.style.cssText = "position: absolute; visibility: hidden; white-space: pre; font: 100px " + FAMILY;
+          probe.textContent = START + "a" + END;
+          document.body.appendChild(probe);
+          var width = probe.getBoundingClientRect().width;
+          probe.remove();
+          Math.abs(width - 1920) < 2 ? yes() : no();
+        }, no);
+      }
+      var h = document.getElementById("h");
+      h.style.fontFamily = FAMILY;
+      whenRunning(function () { h.textContent = START + "hello" + END; },
+                  function () { document.getElementById("c").textContent = "Runs in Safari and Firefox"; });
+</script>

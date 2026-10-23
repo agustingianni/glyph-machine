@@ -37,11 +37,12 @@ body {
 nav {
   width: 100%;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   margin-bottom: -6px;
 }
-nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
-nav a:hover { color: var(--ink); }
+nav a, .foot a { color: var(--muted); text-decoration: none; font-size: 14px; }
+.foot a { font-size: inherit; text-decoration: underline; text-underline-offset: 2px; }
+nav a:hover, .foot a:hover { color: var(--ink); }
 .title {
   margin: 0;
   font-size: clamp(24px, 4.6vw, 38px);

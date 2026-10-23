@@ -1,6 +1,6 @@
 # Glyph Machine
 
-Five small experiments where a line of text does something a font is not
+Six small experiments where a line of text does something a font is not
 supposed to do. Each scene lives entirely inside a font file and is drawn by the
 browser's own text engine. No image, no canvas, no SVG.
 
@@ -29,15 +29,31 @@ browser's own text engine. No image, no canvas, no SVG.
   `FeatureVariations`, `TIME=g` turns on 3 lookups per generation, up to 120.
   COLRv0 colors cells that are newborn, alive, or just died. Click or drag on
   the board to draw.
+- **MD5 hash** (`docs/md5/`) - type up to 55 printable ASCII characters, and
+  the font draws the MD5 hash as 32 hex digits. The font does the padding, the
+  length, and all 64 rounds. Each browser gets its own font. Firefox runs
+  `MD5Graphite.woff2`, a Graphite font: its rules keep MD5's words as integers
+  on one glyph and revisit that glyph 128 times. Safari runs `MD5Safari.woff2`,
+  an AAT `morx` font: 2,690 state machines grow the text into a tape of one
+  glyph per bit, then add, rotate, and copy bits along it. The page wraps the
+  message in invisible private-use characters (U+E000 at the start, U+E001 at
+  the end, and four U+E002 after the start for Safari). Its JavaScript picks
+  the font and checks the input, and never computes the hash.
 
 ## Browser support
 
-Chrome and Firefox shape text with HarfBuzz; Safari uses CoreText. All five
-demos run in all three. Safari does not draw COLRv1, so there the landscape
-uses its COLRv0 flat colors and the plasma uses the CSS text color.
+Chrome and Firefox shape text with HarfBuzz; Safari uses CoreText. The first
+five demos run in all three. Safari does not draw COLRv1, so there the
+landscape uses its COLRv0 flat colors and the plasma uses the CSS text color.
+
+The MD5 demo runs only in Firefox (through its Graphite engine) and Safari
+(through AAT `morx`). Chrome runs neither font, and the page says so instead
+of drawing a hash.
 
 The demos were tested in the Chromium, Firefox, and WebKit builds that come
-with Playwright.
+with Playwright. The MD5 fonts were also checked against Python's `hashlib`
+on 1,334 messages, in Graphite2, CoreText, and by reading the pixels each
+browser drew.
 
 ## Run locally
 
@@ -52,10 +68,25 @@ Then open <http://localhost:8000/>.
     pip install fonttools brotli
     python3 src/build_all.py
 
-This builds the five fonts into `docs/fonts/` (as WOFF2) and then the pages in
+This builds the fonts into `docs/fonts/` (as WOFF2) and then the pages in
 `docs/`. `src/build_site.py` rebuilds only the pages. Tested with fontTools
 4.67. The calculator takes up to a minute, because its `GSUB` table holds a rule
 for every pair of numbers.
+
+The Firefox MD5 font also needs SIL's Graphite compiler, `grcompiler`, at a
+pinned commit with a small patch: the compiler only names 16 of the 64 glyph
+variables that Graphite allows. This script clones it into
+`/tmp/md5-grcompiler` and builds it (it needs git, CMake, a C++ compiler, and
+ICU from Homebrew):
+
+    python3 src/md5/prepare_compiler.py
+
+Without the compiler, `src/build_hash.py` builds only the Safari MD5 font and
+keeps the Firefox one that is already in `docs/fonts/`. Set `GRCOMPILER` and
+`GDLPP` if the compiler lives somewhere else. The builder also fixes two
+problems in that compiler's output: it swaps the AND and OR opcodes back, and
+it keeps the compiler's own `Silf` table layout, because fontTools writes one
+that Firefox's font checker rejects.
 
 ## How Life fits in a font
 
@@ -95,9 +126,12 @@ The images are screenshots of each demo, taken by a script:
     pip install playwright && python3 -m playwright install
     python3 src/build_previews.py
 
-Run it again after you change how a demo looks. The tags need the site's full
-URL, which is `SITE_URL` at the top of `src/build_site.py`. Change it if the
-site lives somewhere else, then run `src/build_site.py` again.
+Run it again after you change how a demo looks. The images are taken in
+Chromium, except any image that shows the MD5 demo, which is taken in Firefox.
+The tags need the site's full URL, which is `SITE_URL` at the top of
+`src/build_site.py`. Each page also links to its font's source on GitHub,
+through `REPO_URL` next to it. Change both if the site or the repo moves, then
+run `src/build_site.py` again.
 
 ## Check the layout
 
@@ -129,6 +163,8 @@ Push to a repo, then in Settings > Pages choose "Deploy from a branch", the
     src/
       build_all.py           builds every font, then the pages
       build_<font>.py        one script per font
+      build_hash.py          the two MD5 fonts, built by the scripts in md5/
+      md5/                   the MD5 builders and the Graphite compiler setup
       build_site.py          the pages, their text, and the shared design
       build_previews.py      the link preview images
       check_layout.py        checks that nothing sticks out of its box

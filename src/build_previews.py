@@ -12,6 +12,9 @@ through its og:image tag. The images are only for link sharing: the demos
 themselves draw everything with fonts.
 
 Run it again after changing a demo. Chromium is used because it draws COLRv1.
+A demo can name another engine in "preview_engine": Chromium runs neither MD5
+font, so any card that shows the MD5 demo is taken in Firefox, which draws
+COLRv1 too.
 """
 import os
 from playwright.sync_api import sync_playwright
@@ -56,21 +59,25 @@ CARD = """<!doctype html>
 """
 
 def card(title, desc, demos):
-    """The card's HTML: one frame per demo. On the gallery's card, the wide
-    demo spans two of the three columns, as in the gallery."""
+    """The card's HTML: one frame per demo. On the gallery's card, each wide
+    demo spans two of the four columns, as in the gallery."""
     frames = "".join(f'<iframe class="{"wide" if len(demos) > 1 and d.get("wide") else ""}" '
                      f'src="{d["slug"]}/hero.html"></iframe>' for d in demos)
     return CARD.format(title=title, desc=desc, frames=frames,
-                       columns="1fr 1fr 1fr" if len(demos) > 1 else "1fr")
+                       columns="repeat(4, 1fr)" if len(demos) > 1 else "1fr")
 
 def main():
     base = serve()
     cards = [("preview.png", SITE_NAME, GALLERY_DESC, DEMOS)]
     cards += [(f"{d['slug']}/preview.png", d["title"], d["card_desc"], [d]) for d in DEMOS]
     with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1200, "height": 630})
+        pages = {}
         for out, title, desc, demos in cards:
+            engine = next((d["preview_engine"] for d in demos if "preview_engine" in d), "chromium")
+            if engine not in pages:
+                pages[engine] = getattr(p, engine).launch().new_page(
+                    viewport={"width": 1200, "height": 630})
+            page = pages[engine]
             # Serve the card from the site's own origin, so its frames load and
             # this script can reach into them.
             html = card(title, desc, demos)
@@ -85,7 +92,8 @@ def main():
             page.screenshot(path=os.path.join(SITE, out))
             page.unroute(base + "card.html")
             print(f"wrote docs/{out} ({os.path.getsize(os.path.join(SITE, out)):,} bytes)")
-        browser.close()
+        for page in pages.values():
+            page.context.browser.close()
 
 if __name__ == "__main__":
     main()

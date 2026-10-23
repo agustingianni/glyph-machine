@@ -5,3 +5,10 @@
 __pycache__/
 *.pyc
 .venv/
+
+# What the MD5 builders write next to themselves; src/build_hash.py saves the
+# fonts to docs/fonts/
+src/md5/*.ttf
+src/md5/*.gdl
+src/md5/*.json
+src/md5/md5_errors.txt
