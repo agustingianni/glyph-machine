@@ -1,7 +1,7 @@
 # Glyph Machine
 
 Six small experiments where a line of text does something a font is not
-supposed to do. Each scene lives entirely inside a font file and is drawn by the
+supposed to do. Each demo lives entirely inside a font file and is drawn by the
 browser's own text engine. No image, no canvas, no SVG.
 
 ## The demos

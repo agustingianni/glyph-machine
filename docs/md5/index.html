@@ -53,8 +53,8 @@
         overflow-wrap: normal;
         letter-spacing: 0;
         font-kerning: none;
-        color: #38e8c0;
-        text-shadow: 0 0 0.06em #38e8c088;
+        color: #39ff8a;
+        text-shadow: 0 0 0.06em #39ff8a88;
       }
       .readout.error { color: var(--hot); }
     </style>
@@ -66,7 +66,7 @@
         <a href="https://github.com/agustingianni/glyph-machine/blob/main/src/build_hash.py">Source</a>
       </nav>
       <h1 class="title">A font that computes MD5</h1>
-      <p class="lede">Type a message. While your browser lays out the text, the font works out its <b>MD5</b> hash and draws the 32 hex digits. All 64 rounds of MD5 run inside the font. The page's JavaScript only checks that the input is printable ASCII.</p>
+      <p class="lede">Type a message. While your browser lays out the text, the font works out its <b>MD5</b> hash and draws the 32 hex digits. The page never computes the hash: its JavaScript only puts your text in the box, and all 64 rounds run inside the font.</p>
 
       <div class="panels">
         <div class="panel">
@@ -90,8 +90,8 @@
       <div class="controls">
         <input type="text" id="in" value="hello" maxlength="55" aria-label="your message"
           autocomplete="off" spellcheck="false" />
+        <span class="readout" id="status" role="status">Loading the font...</span>
       </div>
-      <p class="readout" id="status" role="status">Loading the font...</p>
 
       <div class="legend">
         <span class="chip"><b>Firefox</b>: Graphite rules with integer registers, 6 KB</span>
@@ -100,7 +100,7 @@
         <span class="chip">Up to 55 ASCII characters, one MD5 block</span>
       </div>
 
-      <p class="foot">Each browser gets a font made for its own text engine. Firefox runs Graphite, a rule language with a small integer machine. That font keeps MD5's 16 message words and 4 state words as numbers on one glyph, and revisits the glyph 128 times. Safari runs Apple's AAT <code>morx</code> state machines, which have no numbers, only glyphs and a small state. That font first grows the text into a tape of 704 glyphs, one per bit. Then 2,180 state tables add, rotate, and copy bits along the tape, and keep each carry in the machine's state. The page puts a few invisible characters around your text, so even an empty message has something to shape. Chrome runs neither font.</p>
+      <p class="foot">Each browser gets a font made for its own text engine. Firefox runs Graphite rules, which keep MD5's words as numbers on one glyph and revisit it 128 times. Safari runs AAT <code>morx</code> state machines, which have no numbers: they grow the text into a tape of one glyph per bit, then add, rotate, and copy bits along it. The invisible characters around your text give even an empty message something to shape. Chrome runs neither font.</p>
     </div>
     <script>
       var GRAPHITE = CSS.supports("font-tech(features-graphite)");
@@ -145,8 +145,8 @@
         else if (!ok)
           readout.textContent = "Use only printable ASCII: letters, digits, punctuation, and spaces.";
         else if (state === "ready")
-          readout.textContent = text.length + " of 55 characters. Hash computed by "
-            + (GRAPHITE ? "Firefox's Graphite engine." : "Safari's AAT engine.");
+          readout.textContent = text.length + " of 55 characters, hashed by "
+            + (GRAPHITE ? "Graphite" : "AAT morx");
       }
       inp.addEventListener("input", sync);
       document.querySelectorAll("#presets button").forEach(function (b) {

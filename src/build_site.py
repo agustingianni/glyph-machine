@@ -615,8 +615,8 @@ def hash_page(cfg):
         overflow-wrap: normal;
         letter-spacing: 0;
         font-kerning: none;
-        color: #38e8c0;
-        text-shadow: 0 0 0.06em #38e8c088;
+        color: #39ff8a;
+        text-shadow: 0 0 0.06em #39ff8a88;
       }}
       .readout.error {{ color: var(--hot); }}"""
     buttons = "\n".join(f'        <button data-v="{html.escape(v)}">{label}</button>'
@@ -642,8 +642,8 @@ def hash_page(cfg):
       <div class="controls">
         <input type="text" id="in" value="hello" maxlength="55" aria-label="your message"
           autocomplete="off" spellcheck="false" />
+        <span class="readout" id="status" role="status">Loading the font...</span>
       </div>
-      <p class="readout" id="status" role="status">Loading the font...</p>
 
 {legend(cfg['chips'])}
 
@@ -678,8 +678,8 @@ def hash_page(cfg):
         else if (!ok)
           readout.textContent = "Use only printable ASCII: letters, digits, punctuation, and spaces.";
         else if (state === "ready")
-          readout.textContent = text.length + " of 55 characters. Hash computed by "
-            + (GRAPHITE ? "Firefox's Graphite engine." : "Safari's AAT engine.");
+          readout.textContent = text.length + " of 55 characters, hashed by "
+            + (GRAPHITE ? "Graphite" : "AAT morx");
       }}
       inp.addEventListener("input", sync);
       document.querySelectorAll("#presets button").forEach(function (b) {{
@@ -715,8 +715,8 @@ def hash_hero(cfg):
     font-size: calc(100vw / 22);
     line-height: 1;
     white-space: pre;
-    color: #38e8c0;
-    text-shadow: 0 0 0.06em #38e8c088;
+    color: #39ff8a;
+    text-shadow: 0 0 0.06em #39ff8a88;
   }}""", f"""<div class="s">
   <div class="c" id="c">md5("{html.escape(text)}")</div>
   <div class="h" id="h"></div>
@@ -974,7 +974,7 @@ def gallery(demos):
       <h1 class="title">{TAGLINE}</h1>
       <p class="lede">
         Six small experiments where a line of text does something a font is not
-        supposed to do. Every scene lives inside a font file and is drawn by your
+        supposed to do. Every demo lives inside a font file and is drawn by your
         browser's own text engine. No image, canvas, or SVG. The spinning letters
         above are text too.
       </p>
@@ -1136,27 +1136,25 @@ DEMOS = [
         "hero_text": "hello",
         "title": "A font that computes MD5",
         "card_title": "MD5 hash",
-        "card_desc": "Type a message and the font draws its MD5 hash. Safari and Firefox.",
+        "card_desc": "Type a message and the font draws its MD5 hash. Runs in Safari and Firefox.",
         "description": "A web font that computes the MD5 hash of the text you type. No "
                        "JavaScript does the math: Firefox runs the font's Graphite rules, and "
                        "Safari its AAT morx state machines.",
         "lede": "Type a message. While your browser lays out the text, the font works out its "
-                "<b>MD5</b> hash and draws the 32 hex digits. All 64 rounds of MD5 run inside "
-                "the font. The page's JavaScript only checks that the input is printable ASCII.",
+                "<b>MD5</b> hash and draws the 32 hex digits. The page never computes the hash: "
+                "its JavaScript only puts your text in the box, and all 64 rounds run inside "
+                "the font.",
         "chips": [
             "<b>Firefox</b>: Graphite rules with integer registers, 6 KB",
             "<b>Safari</b>: 2,690 AAT <code>morx</code> state machines, 22 KB",
             "<b>Padding and length</b> worked out by the font",
             "Up to 55 ASCII characters, one MD5 block",
         ],
-        "foot": "Each browser gets a font made for its own text engine. Firefox runs Graphite, "
-                "a rule language with a small integer machine. That font keeps MD5's 16 message "
-                "words and 4 state words as numbers on one glyph, and revisits the glyph 128 "
-                "times. Safari runs Apple's AAT <code>morx</code> state machines, which have no "
-                "numbers, only glyphs and a small state. That font first grows the text into a "
-                "tape of 704 glyphs, one per bit. Then 2,180 state tables add, rotate, and copy "
-                "bits along the tape, and keep each carry in the machine's state. The page puts "
-                "a few invisible characters around your text, so even an empty message has "
+        "foot": "Each browser gets a font made for its own text engine. Firefox runs Graphite "
+                "rules, which keep MD5's words as numbers on one glyph and revisit it 128 times. "
+                "Safari runs AAT <code>morx</code> state machines, which have no numbers: they "
+                "grow the text into a tape of one glyph per bit, then add, rotate, and copy bits "
+                "along it. The invisible characters around your text give even an empty message "
                 "something to shape. Chrome runs neither font.",
     },
 ]
